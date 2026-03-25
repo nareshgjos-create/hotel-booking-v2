@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install uv
+
+COPY pyproject.toml .
+
+# Install only dependencies not the project itself
+RUN uv pip install --system fastapi uvicorn sqlalchemy streamlit langchain langchain-openai langgraph langfuse openai python-dotenv pydantic pydantic-settings loguru requests mlflow
+
+COPY . .
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "frontend/streamlit_app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]

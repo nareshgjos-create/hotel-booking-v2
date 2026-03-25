@@ -1,0 +1,9 @@
+User : what are available 
+Agent: The following hotels are available:
+
+1. The Grand Palace in London - $250/night, 4.8 stars, amenities include WiFi, Pool, Gym, Spa.
+2. City Lights Inn in London - $120/night, 4.2 stars, amenities include WiFi, Breakfast.
+3. Sunset Resort in Paris - $180/night, 4.5 stars, amenities include WiFi, Pool, Restaurant.
+
+Would you like more information or assistance with booking?
+Time : 4.29s

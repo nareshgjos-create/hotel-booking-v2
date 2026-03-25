@@ -1,0 +1,8 @@
+User : Find hotels in Paris
+Agent: I found two hotels in Paris that are available for booking:
+
+1. Sunset Resort - $180 per night, with amenities like WiFi, pool, and restaurant.
+2. Budget Stay - $60 per night, with WiFi.
+
+Would you like to book one of these hotels?
+Time : 3.54s

@@ -1,0 +1,3 @@
+User : hotels in london
+Agent: I can help you with the booking process. Which hotel would you like to book?
+Time : 3.32s

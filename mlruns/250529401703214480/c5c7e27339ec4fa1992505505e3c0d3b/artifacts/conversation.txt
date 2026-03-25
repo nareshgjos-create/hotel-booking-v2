@@ -1,0 +1,3 @@
+User : can you look for hotels in london 
+Agent: I can help you with the booking. Which hotel would you like to book? The Grand Palace or City Lights Inn?
+Time : 4.47s

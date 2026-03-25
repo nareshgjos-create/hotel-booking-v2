@@ -1,0 +1,7 @@
+artifact_location: file:///app/mlruns/250529401703214480
+creation_time: 1774194477246
+experiment_id: '250529401703214480'
+last_update_time: 1774194477246
+lifecycle_stage: active
+name: hotel-booking-agent-v2
+workspace: default

@@ -1,0 +1,41 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: hotel-booking-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./backend/db:/app/backend/db
+      - ./mlruns:/app/mlruns    # ← ADD THIS!
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: hotel-booking-frontend
+    ports:
+      - "8502:8501"
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    restart: always
+
+  mlflow:
+    image: python:3.11-slim
+    container_name: hotel-booking-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns        
+    command: >
+      bash -c "pip install mlflow &&
+               mlflow ui --host 0.0.0.0 --port 5000 --backend-store-uri /mlruns"
+    restart: always

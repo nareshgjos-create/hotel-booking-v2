@@ -1,0 +1,14 @@
+artifact_uri: file:///app/mlruns/250529401703214480/c5c7e27339ec4fa1992505505e3c0d3b/artifacts
+end_time: 1774273077205
+entry_point_name: ''
+experiment_id: '250529401703214480'
+lifecycle_stage: active
+run_id: c5c7e27339ec4fa1992505505e3c0d3b
+run_name: chat_20260323_133756
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1774273076235
+status: 3
+tags: []
+user_id: root
