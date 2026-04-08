@@ -1,0 +1,325 @@
+================================================================================
+  BOOKING AGENT — CHANGES, NEW FILES, AND HOW TO USE
+  Author: Abrar's task for the group project
+================================================================================
+
+OVERVIEW
+--------
+The booking agent has been upgraded with:
+  - A price calculating tool (shows cost before committing)
+  - A fake payment processing tool (generates a transaction ID)
+  - Room type selection (user can pick Standard, Deluxe, Suite)
+  - A multi-step booking flow: price → payment → booking → confirmation
+
+The booking flow now takes two conversation turns instead of one.
+
+
+================================================================================
+NEW FILES CREATED
+================================================================================
+
+1. backend/services/price_service.py
+   ------------------------------------
+   Pure database logic for calculating booking price.
+
+   Function: calculate_price_service(hotel_id, room_type, check_in, check_out, guests)
+
+   What it does:
+     - Looks up the hotel and the requested room type in the database
+     - Validates the room type exists at that hotel
+       (if not, returns a list of available room types so the user can pick)
+     - Validates the room capacity fits the number of guests
+     - Calculates total = nights x price_per_night
+     - Returns a dict with: hotel_name, room_type, price_per_night,
+       nights, check_in, check_out, guests, total_price, currency
+
+   Returns on failure: {"success": False, "message": "...reason..."}
+   Returns on success: {"success": True, ...price breakdown...}
+
+
+2. backend/services/payment_service.py
+   -------------------------------------
+   Simulated (fake) payment processor. Does NOT connect to any real payment gateway.
+
+   Function: process_payment_service(amount, currency, card_number, cardholder_name)
+
+   What it does:
+     - Strips spaces and hyphens from the card number
+     - Validates the card number is 13-19 digits (basic check)
+     - Always approves the payment (it is fake/simulated)
+     - Generates a unique transaction ID in the format: TXN-XXXXXXXXXXXX
+     - Returns: transaction_id, amount, currency, card_last4, cardholder_name, status
+
+   Returns on failure: {"success": False, "message": "...reason..."}
+   Returns on success: {"success": True, "transaction_id": "TXN-...", ...}
+
+
+3. backend/tools/price_tools.py
+   --------------------------------
+   LangChain @tool wrapper around price_service.
+
+   Tool name: calculate_price
+   Parameters:
+     - hotel_id    (int)
+     - room_type   (str) — e.g. "Standard", "Deluxe", "Suite"
+     - check_in    (str) — format: YYYY-MM-DD
+     - check_out   (str) — format: YYYY-MM-DD
+     - guests      (int)
+
+   Returns: A formatted string with the price breakdown, or an error message.
+
+   Example output:
+     💰 Price Breakdown for The Grand Palace:
+       Room type      : Standard
+       Price per night: £220.00
+       Nights         : 4 (2026-04-01 → 2026-04-05)
+       Guests         : 2
+       ─────────────────────────────
+       Total          : £880.00 GBP
+
+
+4. backend/tools/payment_tools.py
+   ----------------------------------
+   LangChain @tool wrapper around payment_service.
+
+   Tool name: process_payment
+   Parameters:
+     - amount          (float)  — total price from price breakdown
+     - currency        (str)    — e.g. "GBP"
+     - card_number     (str)    — user's card number (digits, spaces OK)
+     - cardholder_name (str)    — name on the card
+
+   Returns: A formatted string confirming payment or an error message.
+
+   Example output:
+     ✅ Payment approved!
+       Transaction ID : TXN-A1B2C3D4E5F6
+       Amount charged : £880.00 GBP
+       Card ending    : ****5556
+       Cardholder     : Teja Hussein
+
+
+================================================================================
+MODIFIED FILES
+================================================================================
+
+5. backend/db/models.py
+   -----------------------
+   Added one new column to the Booking table:
+     payment_transaction_id = Column(String, nullable=True)
+
+   IMPORTANT: If you are using an existing database (not a fresh one), you must
+   run this SQL command once to add the column:
+
+     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_transaction_id VARCHAR;
+
+   If using Docker, this runs automatically on container startup via create_all().
+   If using local PostgreSQL, run the command above using psql or pgAdmin.
+
+
+6. backend/services/booking_service.py
+   ---------------------------------------
+   Two additions:
+
+   a) Room type selection:
+      The function now accepts an optional room_type parameter.
+      If provided, it finds that specific room type instead of always picking
+      the first available one. If the requested room type is not available for
+      those dates, it returns an error with the list of available options.
+
+   b) Payment transaction ID:
+      Accepts an optional payment_transaction_id parameter and stores it
+      in the booking record in the database.
+
+   Updated signature:
+     create_booking_service(
+         hotel_id, check_in, check_out, guests,
+         user_name, user_email,
+         room_type=None,             <-- NEW
+         payment_transaction_id=None <-- NEW
+     )
+
+
+7. backend/tools/booking_tools.py
+   ----------------------------------
+   Updated create_booking tool to accept and pass through:
+     - room_type            (str, optional)
+     - payment_transaction_id (str, optional)
+
+   The formatted confirmation output now also includes the Transaction ID.
+
+
+8. backend/agents/booking_agent.py
+   -----------------------------------
+   FULLY REWRITTEN. This is the main change.
+
+   The agent now runs in 5 steps, tracked by a "booking_step" value in state:
+
+   Step 1 — booking_step = ""
+     Uses: calculate_price tool (forced)
+     Action: Calls calculate_price with details from session state
+     Next step: "price_shown"
+
+   Step 2 — booking_step = "price_shown"
+     Uses: No tools (plain LLM response)
+     Action: Shows the price breakdown to the user and asks for card details
+     Next step: "awaiting_payment"
+
+   Step 3 — booking_step = "awaiting_payment"
+     Uses: process_payment tool (forced)
+     Action: Extracts card number and cardholder name from the user's message
+             and calls process_payment
+     Next step: "payment_done"
+
+   Step 4 — booking_step = "payment_done"
+     Uses: create_booking tool (forced)
+     Action: Extracts the transaction ID from step 3's result and calls
+             create_booking with all booking details + transaction ID
+     Next step: "done"
+
+   Step 5 — booking_step = "done"
+     Uses: No tools (plain LLM response)
+     Action: Generates a final confirmation message for the user
+     Next step: "" (resets so the agent is ready for a new booking)
+
+   All tool-calling steps use tool_choice="required" to force the LLM
+   to call the tool instead of generating text asking for more information.
+
+
+9. backend/graph/graph.py
+   -------------------------
+   Four changes:
+
+   a) New state fields added to HotelAgentState:
+        booking_step: str
+        payment_transaction_id: Optional[str]
+
+   b) New tools added to booking_tool_node:
+        ToolNode([calculate_price, process_payment, create_booking])
+
+   c) Loop edge changed:
+        Before: booking_tools → END
+        After:  booking_tools → booking_agent
+      This allows the agent to be called again after each tool executes,
+      enabling the multi-step flow.
+
+   d) Routing bypass added to route_after_orchestrator():
+      If booking_step is mid-flow (price_shown, awaiting_payment,
+      payment_done, done), the orchestrator's routing decision is ignored
+      and the request goes straight to booking_agent. This prevents the
+      orchestrator from misrouting mid-payment messages.
+
+
+10. backend/api/main.py
+    ----------------------
+    Three changes:
+
+    a) Session initialisation:
+       New sessions now include:
+         "booking_step": ""
+         "payment_transaction_id": None
+
+    b) State persistence:
+       booking_step is saved after every request (including when it resets
+       to "" after booking completes). This is handled separately from other
+       state keys because empty string must be saved too (not skipped).
+
+    c) Reply logic fix:
+       Previously the API always used the last ToolMessage as the reply shown
+       to the user. This was changed to prefer the last AIMessage when it is
+       the final message in the graph result. This is needed so that the agent's
+       "here is your price, please provide card details" message actually reaches
+       the user instead of being hidden by the raw tool output.
+
+
+11. backend/guardrails/input_guardrail.py
+    -----------------------------------------
+    Two changes:
+
+    a) Payment keywords added to SUPPORTED_TOPICS:
+         "card", "payment", "cardholder", "pay", "visa",
+         "mastercard", "debit", "credit"
+       Without these, messages like "card number: 4242..." were blocked
+       as off-topic.
+
+    b) Short-followup pattern added:
+         r"^[\d\s\-]{13,19}$"
+       Allows a bare card number (digits only with spaces or hyphens) to
+       pass through without topic checking.
+
+
+================================================================================
+FULL CONVERSATION FLOW (END TO END)
+================================================================================
+
+User:   "Search for hotels in London"
+Bot:    Lists hotels with IDs, names, ratings, amenities
+
+User:   "Hotel ID 1, 2 guests"
+Bot:    "Please provide check-in and check-out dates"
+
+User:   "Check in 2026-04-01, check out 2026-04-05"
+Bot:    Lists available room types with prices
+
+User:   "Book Standard room at hotel 1"
+        (or the orchestrator collects all details and shows a summary)
+Bot:    "Please confirm: Hotel 1, Standard, Apr 1-5, 2 guests. Type yes to confirm."
+
+User:   "yes"
+        → booking_step = "" → Step 1 → calculate_price runs
+        → booking_step = "price_shown" → Step 2
+Bot:    "💰 Price Breakdown:
+          Standard room: £220/night
+          4 nights
+          Total: £880 GBP
+         Please provide your card number and cardholder name."
+
+User:   "card number: 4242424242424242 cardholder name: John Smith"
+        → booking_step = "awaiting_payment" → Step 3 → process_payment runs
+        → booking_step = "payment_done" → Step 4 → create_booking runs
+        → booking_step = "done" → Step 5
+Bot:    "✅ Booking confirmed!
+          Booking reference: BK-XXXXXXXX
+          Hotel: The Grand Palace
+          Room: Standard
+          Check-in: 2026-04-01
+          Check-out: 2026-04-05
+          Total: £880.00 GBP
+          Transaction ID: TXN-A1B2C3D4E5F6"
+
+
+================================================================================
+SETUP NOTES FOR GROUP MEMBERS
+================================================================================
+
+1. DATABASE COLUMN
+   If you already have data in the bookings table (e.g. from seed.py),
+   you MUST add the new column manually before running the server:
+
+   Using psql (local PostgreSQL):
+     psql -U postgres -d hotel_booking -c "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_transaction_id VARCHAR;"
+
+   Using pgAdmin:
+     Open the Query Tool on the hotel_booking database and run:
+     ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_transaction_id VARCHAR;
+
+   If you drop and recreate the database (fresh start), this is not needed —
+   create_all() will create the column automatically.
+
+2. RUNNING THE SERVER
+   From the project root:
+     uvicorn backend.api.main:app --reload --host 127.0.0.1 --port 8000
+
+3. ENVIRONMENT
+   Make sure .env has a valid DATABASE_URL pointing to your PostgreSQL instance.
+   Local example:
+     DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/hotel_booking
+
+4. TESTING PAYMENT
+   Any valid-format card number works (13-19 digits). The payment always succeeds.
+   Example test card numbers:
+     4000056655665556
+     4242424242424242
+     5555555555554444
+
+================================================================================

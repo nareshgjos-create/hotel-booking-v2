@@ -1,33 +1,30 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from backend.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-# ── Create engine ────────────────────────────
-# Engine = connection to our SQLite database file
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in the environment.")
+
 engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    DATABASE_URL,
+    pool_pre_ping=True,
 )
 
-# ── Session ───────────────────────────────────
-# Session = like opening the database to read/write
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
 
-# ── Base ──────────────────────────────────────
-# Base = parent class all our models inherit from
 Base = declarative_base()
 
-# ── get_db ────────────────────────────────────
+
 def get_db():
-    """
-    Creates a database session for each request
-    Closes it automatically when done!
-    """
     db = SessionLocal()
     try:
         yield db

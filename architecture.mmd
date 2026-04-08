@@ -1,0 +1,152 @@
+flowchart TD
+    %% ── Frontend ──────────────────────────────────────────────────────────
+    subgraph FRONTEND["🖥️ Frontend — Streamlit"]
+        UI["Chat Interface\n(streamlit_app.py)"]
+        UPLOAD["Invoice Uploader\n(file_uploader)"]
+    end
+
+    %% ── API Layer ─────────────────────────────────────────────────────────
+    subgraph API["⚡ FastAPI — backend/api/main.py"]
+        CHAT["/chat\nPOST"]
+        UPLOAD_EP["/upload-invoice\nPOST"]
+        SESSION["Session Store\n(in-memory dict)"]
+        IG["Input Guardrail\nvalidate_input()"]
+        OG["Output Guardrail\nsanitize_output()"]
+    end
+
+    %% ── LangGraph State Machine ───────────────────────────────────────────
+    subgraph GRAPH["🔄 LangGraph Graph — backend/graph/graph.py"]
+        ORCH["Orchestrator Agent\nroute_after_orchestrator()"]
+
+        subgraph AGENTS["Agents"]
+            SA["Search & Availability Agent"]
+            BA["Booking Agent\n(5-step state machine)"]
+            IA["Invoice Agent"]
+        end
+
+        subgraph TOOL_NODES["Tool Nodes"]
+            SATOOLS["Search Tools Node"]
+            BTOOLS["Booking Tools Node"]
+        end
+    end
+
+    %% ── Tools ─────────────────────────────────────────────────────────────
+    subgraph TOOLS["🛠️ Tools"]
+        direction LR
+        T1["search_hotels"]
+        T2["check_hotel_availability"]
+        T3["calculate_price"]
+        T4["process_payment"]
+        T5["create_booking"]
+        T6["extract_invoice_data\n(PDF / image)"]
+        T7["check_payment_status"]
+        T8["lookup_company_contact"]
+    end
+
+    %% ── Services ──────────────────────────────────────────────────────────
+    subgraph SERVICES["🔧 Services — backend/services/"]
+        SVC1["hotel_service"]
+        SVC2["availability_service"]
+        SVC3["price_service"]
+        SVC4["payment_service\n(simulated)"]
+        SVC5["booking_service"]
+    end
+
+    %% ── Data Layer ────────────────────────────────────────────────────────
+    subgraph DB["🗄️ PostgreSQL — SQLAlchemy Models"]
+        M1["Hotel\nRoomType"]
+        M2["Booking"]
+        M3["PaymentRecord"]
+        M4["CompanyContact"]
+    end
+
+    %% ── External AI ───────────────────────────────────────────────────────
+    subgraph AI["☁️ Azure OpenAI"]
+        LLM["GPT-4o\n(AzureChatOpenAI)"]
+        VISION["GPT-4o Vision\n(AzureOpenAI — invoice images)"]
+    end
+
+    %% ── Observability ─────────────────────────────────────────────────────
+    subgraph OBS["📊 Observability"]
+        LF["Langfuse\n(@observe traces)"]
+        EVAL["Evaluator\n(relevance / helpfulness)"]
+        TRACE["Tracing\n(trace_all)"]
+        UPLOADS["/app/uploads/\n(server-side invoice files)"]
+    end
+
+    %% ── Flow ──────────────────────────────────────────────────────────────
+
+    %% User → API
+    UI -->|"POST /chat\n{message, session_id,\ninvoice_file_path}"| CHAT
+    UPLOAD -->|"POST /upload-invoice\nmultipart/form-data"| UPLOAD_EP
+    UPLOAD_EP -->|"UUID path"| UPLOADS
+    UPLOAD_EP -->|"file_path returned"| UI
+
+    %% API internals
+    CHAT --> IG
+    IG -->|allowed| SESSION
+    SESSION -->|state dict| GRAPH
+    GRAPH -->|result| OG
+    OG -->|reply| UI
+
+    %% Orchestrator routing
+    ORCH -->|"search_hotels /\ncheck_availability"| SA
+    ORCH -->|"confirm_booking /\ncreate_booking"| BA
+    ORCH -->|process_invoice| IA
+    ORCH -->|"ask_followup /\nreject_request"| END_NODE(("END"))
+
+    %% Agent → Tool loops
+    SA --> SATOOLS
+    SATOOLS -->|results| END_NODE
+    BA <-->|"tool call loop\n(5 steps)"| BTOOLS
+    BTOOLS --> BA
+    IA --> END_NODE
+
+    %% Tools → Services / DB / AI
+    T1 --> SVC1 --> M1
+    T2 --> SVC2 --> M1
+    T3 --> SVC3 --> M1
+    T4 --> SVC4
+    T5 --> SVC5 --> M2
+    T6 -->|PDF text| LLM
+    T6 -->|image b64| VISION
+    T7 --> M3
+    T8 --> M4
+
+    %% Tool nodes use tools
+    SATOOLS --> T1
+    SATOOLS --> T2
+    BTOOLS --> T3
+    BTOOLS --> T4
+    BTOOLS --> T5
+    IA --> T6
+    IA --> T7
+    IA --> T8
+
+    %% Agents → LLM
+    ORCH -->|structured output| LLM
+    SA --> LLM
+    BA --> LLM
+    IA --> LLM
+
+    %% Observability
+    GRAPH -->|"@observe spans"| LF
+    CHAT --> EVAL --> LF
+    CHAT --> TRACE --> LF
+
+    %% Styles
+    classDef frontend fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef api fill:#dcfce7,stroke:#22c55e,color:#14532d
+    classDef graph fill:#fef9c3,stroke:#eab308,color:#713f12
+    classDef tools fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef db fill:#f3e8ff,stroke:#a855f7,color:#581c87
+    classDef ai fill:#ffedd5,stroke:#f97316,color:#7c2d12
+    classDef obs fill:#f1f5f9,stroke:#94a3b8,color:#334155
+
+    class UI,UPLOAD frontend
+    class CHAT,UPLOAD_EP,SESSION,IG,OG api
+    class ORCH,SA,BA,IA,SATOOLS,BTOOLS graph
+    class T1,T2,T3,T4,T5,T6,T7,T8 tools
+    class M1,M2,M3,M4,SVC1,SVC2,SVC3,SVC4,SVC5 db
+    class LLM,VISION ai
+    class LF,EVAL,TRACE,UPLOADS obs

@@ -1,4 +1,4 @@
-from backend.db.database import SessionLocal
+from backend.db.database1 import SessionLocal
 from backend.db.models import Hotel, RoomType, Booking
 
 db = SessionLocal()

@@ -15,6 +15,7 @@ class HotelAgentState(TypedDict, total=False):
         "check_availability",
         "create_booking",
         "ask_followup",
+        "process_invoice",
         "reject_request",
     ]
     selected_agent: Optional[str]
@@ -26,6 +27,7 @@ class HotelAgentState(TypedDict, total=False):
     guests: Optional[int]
     room_type: Optional[str]
 
+    invoice_file_path: Optional[str]
     missing_fields: List[str]
     guardrail_flags: List[str]
     policy_decision: Literal["allow", "clarify", "block"]

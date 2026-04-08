@@ -1,0 +1,67 @@
+{
+  "family": "hotel-booking-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/hotel-booking-task-role",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/hotel-booking/backend:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:hotel-booking/DATABASE_URL"
+        },
+        {
+          "name": "AZURE_OPENAI_KEY",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:hotel-booking/AZURE_OPENAI_KEY"
+        },
+        {
+          "name": "AZURE_OPENAI_ENDPOINT",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:hotel-booking/AZURE_OPENAI_ENDPOINT"
+        },
+        {
+          "name": "AZURE_OPENAI_API_VERSION",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:hotel-booking/AZURE_OPENAI_API_VERSION"
+        },
+        {
+          "name": "AZURE_OPENAI_DEPLOYMENT",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:hotel-booking/AZURE_OPENAI_DEPLOYMENT"
+        },
+        {
+          "name": "LANGFUSE_PUBLIC_KEY",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:hotel-booking/LANGFUSE_PUBLIC_KEY"
+        },
+        {
+          "name": "LANGFUSE_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:hotel-booking/LANGFUSE_SECRET_KEY"
+        }
+      ],
+      "environment": [
+        { "name": "AWS_REGION",  "value": "eu-west-2" },
+        { "name": "S3_BUCKET",   "value": "hotel-booking-invoices" },
+        { "name": "S3_PREFIX",   "value": "uploads" },
+        { "name": "API_HOST",    "value": "0.0.0.0" },
+        { "name": "API_PORT",    "value": "8000" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/hotel-booking-backend",
+          "awslogs-region": "eu-west-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

@@ -74,6 +74,8 @@ opentelemetry-semantic-conventions==0.61b0
 orjson==3.11.7
 ormsgpack==1.12.2
 packaging==25.0
+pdfplumber>=0.11.0
+python-multipart>=0.0.9
 pandas==2.3.3
 pillow==12.1.1
 prettytable==3.17.0

@@ -20,5 +20,19 @@ logger.add(
     "logs/app.log",
     rotation="1 MB",
     retention="7 days",
-    level="DEBUG"
+    level="DEBUG",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{line} | {message}",
+)
+
+# Separate auth log — captures registration, login, and token events
+logger.add(
+    "logs/auth.log",
+    rotation="1 MB",
+    retention="30 days",
+    level="INFO",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+    filter=lambda record: any(
+        kw in record["message"].lower()
+        for kw in ["register", "login", "auth", "token", "user logged", "failed login"]
+    ),
 )

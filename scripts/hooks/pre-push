@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# pre-push hook — runs the full test suite before every git push.
+# If any test fails the push is aborted.
+#
+# Installed automatically by: scripts/install-hooks.sh
+
+set -euo pipefail
+
+# ── Locate the project root (the directory that contains pytest.ini) ──────────
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# hooks/ → scripts/ → project root
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+cd "$PROJECT_ROOT"
+
+# ── Choose the Python interpreter ─────────────────────────────────────────────
+# Prefer the local venv (.venv-test or .venv), fall back to system python3.
+if [ -f ".venv-test/Scripts/python" ]; then       # Windows Git Bash
+  PYTHON=".venv-test/Scripts/python"
+elif [ -f ".venv-test/bin/python" ]; then          # macOS / Linux
+  PYTHON=".venv-test/bin/python"
+elif [ -f ".venv/bin/python" ]; then
+  PYTHON=".venv/bin/python"
+else
+  PYTHON="python3"
+fi
+
+# ── Fake env vars so pydantic Settings can initialise (tests mock everything) ─
+export AZURE_OPENAI_KEY="${AZURE_OPENAI_KEY:-fake-key-for-hook}"
+export AZURE_OPENAI_ENDPOINT="${AZURE_OPENAI_ENDPOINT:-https://fake.openai.azure.com/}"
+export AZURE_OPENAI_API_VERSION="${AZURE_OPENAI_API_VERSION:-2024-02-01}"
+export AZURE_OPENAI_DEPLOYMENT="${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}"
+export DATABASE_URL="${DATABASE_URL:-postgresql://fake:fake@localhost:5432/fake}"
+export LANGFUSE_PUBLIC_KEY="${LANGFUSE_PUBLIC_KEY:-fake-public}"
+export LANGFUSE_SECRET_KEY="${LANGFUSE_SECRET_KEY:-fake-secret}"
+
+echo ""
+echo "🔍 Running tests before push..."
+echo "   Python : $PYTHON"
+echo "   Root   : $PROJECT_ROOT"
+echo ""
+
+if "$PYTHON" -m pytest --tb=short -q; then
+  echo ""
+  echo "✅ All tests passed — push proceeding."
+  exit 0
+else
+  echo ""
+  echo "❌ Tests FAILED — push aborted."
+  echo "   Fix the failing tests and try again."
+  exit 1
+fi

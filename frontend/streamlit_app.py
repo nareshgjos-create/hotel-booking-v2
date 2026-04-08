@@ -1,7 +1,11 @@
+import os
+import uuid
 import streamlit as st
 import requests
 
-CHAT_URL = "http://127.0.0.1:8000/chat"
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+CHAT_URL = f"{API_URL}/chat"
+UPLOAD_URL = f"{API_URL}/upload-invoice"
 
 st.set_page_config(
     page_title="Hotel Booking Agent",
@@ -41,6 +45,10 @@ if "user_email" not in st.session_state:
     st.session_state.user_email = ""
 if "profile_set" not in st.session_state:
     st.session_state.profile_set = False
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+if "invoice_file_path" not in st.session_state:
+    st.session_state.invoice_file_path = ""
 
 st.title("🏨 Hotel Booking Agent")
 st.caption("Powered by AI Agents — Search + Availability + Booking")
@@ -72,8 +80,68 @@ with st.sidebar:
 
     st.divider()
 
+    st.header("🧾 Invoice Processing")
+    st.caption("Upload a PDF or image invoice to process")
+
+    uploaded_file = st.file_uploader(
+        "Upload Invoice",
+        type=["pdf", "png", "jpg", "jpeg"],
+        label_visibility="collapsed"
+    )
+
+    if uploaded_file is not None:
+        with st.spinner("Uploading invoice..."):
+            try:
+                resp = requests.post(
+                    UPLOAD_URL,
+                    files={"file": (uploaded_file.name, uploaded_file, uploaded_file.type)}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if "file_path" in data:
+                        st.session_state.invoice_file_path = data["file_path"]
+                        st.success(f"✅ Invoice uploaded: {uploaded_file.name}")
+                    else:
+                        st.error(f"Upload error: {data.get('error', 'Unknown error')}")
+                else:
+                    st.error(f"Upload failed: {resp.status_code}")
+            except Exception as e:
+                st.error(f"Cannot connect to server: {str(e)}")
+
+    if st.session_state.invoice_file_path:
+        if st.button("🧾 Process Uploaded Invoice", use_container_width=True):
+            st.session_state.messages.append({
+                "role": "user",
+                "content": "Process the uploaded invoice"
+            })
+            with st.spinner("🤖 Processing invoice..."):
+                try:
+                    response = requests.post(
+                        CHAT_URL,
+                        json={
+                            "message": "Process the uploaded invoice",
+                            "user_name": st.session_state.user_name,
+                            "user_email": st.session_state.user_email,
+                            "session_id": st.session_state.session_id,
+                            "invoice_file_path": st.session_state.invoice_file_path,
+                        }
+                    )
+                    if response.status_code == 200:
+                        agent_reply = response.json().get("response", "No response.")
+                    else:
+                        agent_reply = f"❌ Error: {response.status_code}"
+                except Exception as e:
+                    agent_reply = f"❌ Cannot connect to server: {str(e)}"
+
+            st.session_state.messages.append({"role": "assistant", "content": agent_reply})
+            st.session_state.invoice_file_path = ""
+            st.rerun()
+
+    st.divider()
+
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
+        st.session_state.session_id = str(uuid.uuid4())
         st.rerun()
 
     st.divider()
@@ -149,13 +217,19 @@ if user_input:
                     json={
                         "message": user_input,
                         "user_name": st.session_state.user_name,
-                        "user_email": st.session_state.user_email
+                        "user_email": st.session_state.user_email,
+                        "session_id": st.session_state.session_id
                     }
                 )
 
                 if response.status_code == 200:
                     data = response.json()
                     agent_reply = data.get("response", "❌ Backend returned no response field.")
+
+                    # keep backend-generated session_id if returned
+                    returned_session_id = data.get("session_id")
+                    if returned_session_id:
+                        st.session_state.session_id = returned_session_id
                 else:
                     agent_reply = f"❌ Backend error: {response.status_code} - {response.text}"
 

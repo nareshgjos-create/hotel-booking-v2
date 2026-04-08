@@ -2,12 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install uv
+RUN pip install --upgrade pip
 
-COPY pyproject.toml .
-
-# Install only dependencies not the project itself
-RUN uv pip install --system fastapi uvicorn sqlalchemy streamlit langchain langchain-openai langgraph langfuse openai python-dotenv pydantic pydantic-settings loguru requests mlflow
+COPY requirements-docker.txt .
+RUN pip install --no-cache-dir -r requirements-docker.txt
 
 COPY . .
 

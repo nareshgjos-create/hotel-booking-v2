@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime
 
 from sqlalchemy import (
     Column,
@@ -14,6 +14,40 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from backend.db.database import Base
+
+
+class PaymentRecord(Base):
+    """Stores invoice payment status records."""
+    __tablename__ = "payment_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_number = Column(String, nullable=False, unique=True, index=True)
+    vendor_name = Column(String, nullable=False)
+    payment_status = Column(String, nullable=False, default="pending")  # paid/pending/overdue/partial
+    amount_due = Column(Float, nullable=False)
+    amount_paid = Column(Float, nullable=False, default=0.0)
+    due_date = Column(String, nullable=True)
+    payment_date = Column(String, nullable=True)
+
+    def __repr__(self):
+        return f"<PaymentRecord invoice='{self.invoice_number}' status='{self.payment_status}'>"
+
+
+class CompanyContact(Base):
+    """Stores vendor/company contact information."""
+    __tablename__ = "company_contacts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_name = Column(String, nullable=False, index=True)
+    alias = Column(String, nullable=True, index=True)
+    phone_number = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    website = Column(String, nullable=True)
+    contact_person = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+
+    def __repr__(self):
+        return f"<CompanyContact company='{self.company_name}'>"
 
 
 class Hotel(Base):
@@ -102,8 +136,13 @@ class Booking(Base):
     check_in = Column(Date, nullable=False, index=True)
     check_out = Column(Date, nullable=False, index=True)
     guests = Column(Integer, nullable=False)
-
+    
+    booked_price_per_night = Column(Float, nullable=False)
+    total_price = Column(Float, nullable=False)
+    currency = Column(String, nullable=False, default="USD")
+    
     status = Column(String, nullable=False, default="confirmed", index=True)
+    payment_transaction_id = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     hotel = relationship("Hotel", back_populates="bookings")

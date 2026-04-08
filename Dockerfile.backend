@@ -2,17 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install uv
+# System libraries required by psycopg2-binary and pdfplumber
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev gcc && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
+RUN pip install --upgrade pip
 
-# Install only dependencies not the project itself
-RUN uv pip install --system fastapi uvicorn sqlalchemy streamlit langchain langchain-openai langgraph langfuse openai python-dotenv pydantic pydantic-settings loguru requests mlflow
+COPY requirements-docker.txt .
+RUN pip install --no-cache-dir -r requirements-docker.txt
 
 COPY . .
 
-RUN mkdir -p logs
+RUN mkdir -p logs /app/uploads
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "python create_tables.py && python backend/db/seed.py && uvicorn backend.api.main:app --host 0.0.0.0 --port 8000"]

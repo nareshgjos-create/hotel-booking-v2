@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1900" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1600" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- TITLE -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="title" value="Hotel Booking v2 — System Architecture (AWS Deployment)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=22;fontStyle=1;fontColor=#1e293b;" vertex="1" parent="1">
+      <mxGeometry x="500" y="20" width="1100" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- AWS CLOUD OUTER BOUNDARY -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="aws_boundary" value="" style="points=[[0,0],[1,0],[1,1],[0,1]];shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=none;verticalAlign=top;align=center;spacingTop=25;fontStyle=1;fontSize=14;fontColor=#232F3E;dashed=0;strokeWidth=3;" vertex="1" parent="1">
+      <mxGeometry x="30" y="65" width="2130" height="1440" as="geometry"/>
+    </mxCell>
+    <mxCell id="aws_label" value="AWS Cloud" style="text;html=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#232F3E;" vertex="1" parent="1">
+      <mxGeometry x="50" y="70" width="120" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- LANE 0: CI/CD PIPELINE -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="lane_cicd" value="🔨  CI/CD Pipeline — Docker Build &amp; Deploy" style="swimlane;startSize=30;fillColor=#fafafa;strokeColor=#475569;fontStyle=1;fontSize=12;fontColor=#1e293b;dashed=1;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="50" y="95" width="2110" height="100" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cicd_src" value="&lt;b&gt;Source Code&lt;/b&gt;&lt;br&gt;hotel-booking-v2/&lt;br&gt;&lt;i&gt;backend/ + frontend/&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#f1f5f9;strokeColor=#475569;fontColor=#1e293b;fontSize=11;" vertex="1" parent="lane_cicd">
+      <mxGeometry x="30" y="35" width="160" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cicd_dockerfile_be" value="&lt;b&gt;Dockerfile (Backend)&lt;/b&gt;&lt;br&gt;FastAPI + uvicorn&lt;br&gt;&lt;i&gt;Port 8000&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#1e293b;fontSize=11;" vertex="1" parent="lane_cicd">
+      <mxGeometry x="240" y="35" width="180" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cicd_dockerfile_fe" value="&lt;b&gt;Dockerfile (Frontend)&lt;/b&gt;&lt;br&gt;Streamlit&lt;br&gt;&lt;i&gt;Port 8501&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#e2e8f0;strokeColor=#475569;fontColor=#1e293b;fontSize=11;" vertex="1" parent="lane_cicd">
+      <mxGeometry x="470" y="35" width="180" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cicd_build" value="&lt;b&gt;docker build&lt;/b&gt;&lt;br&gt;&lt;i&gt;Build images locally&lt;br&gt;or via GitHub Actions&lt;/i&gt;" style="shape=mxgraph.flowchart.process;whiteSpace=wrap;fillColor=#dbeafe;strokeColor=#3b82f6;fontColor=#1e3a5f;fontSize=11;" vertex="1" parent="lane_cicd">
+      <mxGeometry x="710" y="35" width="160" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cicd_ecr" value="&lt;b&gt;Amazon ECR&lt;/b&gt;&lt;br&gt;hotel-booking/backend:latest&lt;br&gt;hotel-booking/frontend:latest" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;fillColor=#ED7100;strokeColor=#bf5a00;fontColor=#ffffff;fontSize=11;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="lane_cicd">
+      <mxGeometry x="930" y="20" width="60" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="cicd_ecr_lbl" value="Amazon ECR" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;" vertex="1" parent="lane_cicd">
+      <mxGeometry x="910" y="82" width="100" height="14" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cicd_push" value="docker push" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;fontColor=#3b82f6;" vertex="1" parent="lane_cicd">
+      <mxGeometry x="878" y="55" width="80" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- ECS CLUSTER BOUNDARY -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="ecs_cluster" value="Amazon ECS Cluster (Fargate)" style="points=[[0,0],[1,0],[1,1],[0,1]];shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_ecs;strokeColor=#E7157B;fillColor=#fdf2f8;verticalAlign=top;align=left;spacingTop=5;spacingLeft=10;fontStyle=1;fontSize=12;fontColor=#E7157B;dashed=0;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="50" y="210" width="1390" height="600" as="geometry"/>
+    </mxCell>
+
+    <!-- ALB -->
+    <mxCell id="alb" value="&lt;b&gt;Application Load Balancer&lt;/b&gt;&lt;br&gt;/  → Frontend :8501&lt;br&gt;/api → Backend :8000" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.application_load_balancer;fillColor=#8C4FFF;strokeColor=#6B3BBB;fontColor=#ffffff;fontSize=10;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="80" y="250" width="60" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="alb_lbl" value="ALB" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#6B3BBB;" vertex="1" parent="1">
+      <mxGeometry x="90" y="315" width="40" height="14" as="geometry"/>
+    </mxCell>
+
+    <!-- ── ECS SERVICE: FRONTEND ── -->
+    <mxCell id="ecs_fe_svc" value="ECS Service — Frontend" style="swimlane;startSize=25;fillColor=#fce7f3;strokeColor=#E7157B;fontStyle=1;fontSize=11;fontColor=#831843;" vertex="1" parent="1">
+      <mxGeometry x="180" y="210" width="580" height="200" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="ecs_fe_task" value="&lt;b&gt;Fargate Task&lt;/b&gt;&lt;br&gt;hotel-booking/frontend:latest" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecs;fillColor=#E7157B;strokeColor=#AB0073;fontColor=#ffffff;fontSize=10;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="ecs_fe_svc">
+      <mxGeometry x="30" y="40" width="50" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="fe_chat2" value="&lt;b&gt;Chat Interface&lt;/b&gt;&lt;br&gt;streamlit_app.py&lt;br&gt;&lt;i&gt;Message input + history&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#E7157B;fontColor=#831843;fontSize=11;" vertex="1" parent="ecs_fe_svc">
+      <mxGeometry x="120" y="35" width="170" height="55" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="fe_upload2" value="&lt;b&gt;Invoice Uploader&lt;/b&gt;&lt;br&gt;st.file_uploader&lt;br&gt;&lt;i&gt;PDF / PNG / JPG&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#E7157B;fontColor=#831843;fontSize=11;" vertex="1" parent="ecs_fe_svc">
+      <mxGeometry x="310" y="35" width="170" height="55" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="fe_sidebar2" value="&lt;b&gt;Profile Sidebar&lt;/b&gt;&lt;br&gt;&lt;i&gt;Name, email, session&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#E7157B;fontColor=#831843;fontSize=11;" vertex="1" parent="ecs_fe_svc">
+      <mxGeometry x="120" y="110" width="170" height="55" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="fe_btn2" value="&lt;b&gt;Process Invoice Btn&lt;/b&gt;&lt;br&gt;&lt;i&gt;Sends file_path + msg&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#E7157B;fontColor=#831843;fontSize=11;" vertex="1" parent="ecs_fe_svc">
+      <mxGeometry x="310" y="110" width="170" height="55" as="geometry"/>
+    </mxCell>
+
+    <!-- ── ECS SERVICE: BACKEND ── -->
+    <mxCell id="ecs_be_svc" value="ECS Service — Backend" style="swimlane;startSize=25;fillColor=#dcfce7;strokeColor=#22c55e;fontStyle=1;fontSize=11;fontColor=#14532d;" vertex="1" parent="1">
+      <mxGeometry x="180" y="430" width="1200" height="360" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="ecs_be_task" value="&lt;b&gt;Fargate Task&lt;/b&gt;&lt;br&gt;hotel-booking/backend:latest" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecs;fillColor=#22c55e;strokeColor=#15803d;fontColor=#ffffff;fontSize=10;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="ecs_be_svc">
+      <mxGeometry x="10" y="40" width="50" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="api_upload_ep2" value="&lt;b&gt;POST /upload-invoice&lt;/b&gt;&lt;br&gt;Validates ext, streams to S3&lt;br&gt;&lt;i&gt;Returns s3_key / presigned URL&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#bbf7d0;strokeColor=#22c55e;fontColor=#14532d;fontSize=11;" vertex="1" parent="ecs_be_svc">
+      <mxGeometry x="80" y="35" width="210" height="65" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="api_chat_ep2" value="&lt;b&gt;POST /chat&lt;/b&gt;&lt;br&gt;message, user_name, user_email,&lt;br&gt;session_id, invoice_file_path" style="rounded=1;whiteSpace=wrap;fillColor=#bbf7d0;strokeColor=#22c55e;fontColor=#14532d;fontSize=11;" vertex="1" parent="ecs_be_svc">
+      <mxGeometry x="310" y="35" width="200" height="65" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="api_session2" value="&lt;b&gt;Session Store&lt;/b&gt;&lt;br&gt;In-memory dict&lt;br&gt;&lt;i&gt;(ElastiCache Redis&lt;br&gt;recommended for prod)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#bbf7d0;strokeColor=#22c55e;fontColor=#14532d;fontSize=11;" vertex="1" parent="ecs_be_svc">
+      <mxGeometry x="530" y="35" width="190" height="65" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="api_guard2" value="&lt;b&gt;Input Guardrail&lt;/b&gt;&lt;br&gt;validate_input()&lt;br&gt;&lt;b&gt;Output Guardrail&lt;/b&gt;&lt;br&gt;sanitize_output()" style="rounded=1;whiteSpace=wrap;fillColor=#bbf7d0;strokeColor=#22c55e;fontColor=#14532d;fontSize=11;" vertex="1" parent="ecs_be_svc">
+      <mxGeometry x="740" y="35" width="180" height="65" as="geometry"/>
+    </mxCell>
+
+    <!-- LangGraph inside backend -->
+    <mxCell id="lg_border" value="LangGraph — HotelAgentState" style="swimlane;startSize=22;fillColor=#fef9c3;strokeColor=#eab308;fontStyle=1;fontSize=11;fontColor=#713f12;" vertex="1" parent="ecs_be_svc">
+      <mxGeometry x="80" y="120" width="1090" height="220" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g_orch2" value="&lt;b&gt;Orchestrator&lt;/b&gt;&lt;br&gt;RoutingDecision&lt;br&gt;_post_validate_decision()" style="rounded=1;whiteSpace=wrap;fillColor=#fde68a;strokeColor=#eab308;fontColor=#713f12;fontSize=10;" vertex="1" parent="lg_border">
+      <mxGeometry x="20" y="35" width="150" height="70" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g_sa2" value="&lt;b&gt;Search &amp; Availability&lt;/b&gt;&lt;br&gt;search_hotels&lt;br&gt;check_availability" style="rounded=1;whiteSpace=wrap;fillColor=#fde68a;strokeColor=#eab308;fontColor=#713f12;fontSize=10;" vertex="1" parent="lg_border">
+      <mxGeometry x="210" y="35" width="170" height="70" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g_ba2" value="&lt;b&gt;Booking Agent&lt;/b&gt;&lt;br&gt;5-step state machine&lt;br&gt;price→pay→book→confirm" style="rounded=1;whiteSpace=wrap;fillColor=#fde68a;strokeColor=#eab308;fontColor=#713f12;fontSize=10;" vertex="1" parent="lg_border">
+      <mxGeometry x="420" y="35" width="170" height="70" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g_ia2" value="&lt;b&gt;Invoice Agent&lt;/b&gt;&lt;br&gt;extract → check_payment&lt;br&gt;→ lookup_contact" style="rounded=1;whiteSpace=wrap;fillColor=#fde68a;strokeColor=#eab308;fontColor=#713f12;fontSize=10;" vertex="1" parent="lg_border">
+      <mxGeometry x="630" y="35" width="170" height="70" as="geometry"/>
+    </mxCell>
+
+    <!-- Tools row inside LangGraph -->
+    <mxCell id="tools_row" value="" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#831843;" vertex="1" parent="lg_border">
+      <mxGeometry x="10" y="115" width="80" height="20" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="t2_search" value="search_hotels" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="20" y="140" width="120" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2_avail" value="check_hotel_availability" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="155" y="140" width="150" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2_price" value="calculate_price" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="320" y="140" width="120" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2_pay" value="process_payment" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="455" y="140" width="120" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2_book" value="create_booking" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="590" y="140" width="120" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2_inv" value="extract_invoice_data" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="725" y="140" width="140" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2_pstatus" value="check_payment_status" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="880" y="140" width="140" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2_contact" value="lookup_company_contact" style="rounded=1;whiteSpace=wrap;fillColor=#fbcfe8;strokeColor=#ec4899;fontColor=#831843;fontSize=9;" vertex="1" parent="lg_border">
+      <mxGeometry x="1010" y="75" width="60" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- AWS: S3 BUCKET (replaces /app/uploads/) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="s3_bucket" value="&lt;b&gt;Amazon S3&lt;/b&gt;&lt;br&gt;hotel-booking-invoices/&lt;br&gt;&lt;i&gt;uploads/&lt;uuid&gt;.pdf|png|jpg&lt;br&gt;Server-side invoice files&lt;/i&gt;" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;fillColor=#3F8624;strokeColor=#2d6219;fontColor=#ffffff;fontSize=11;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1460" y="280" width="70" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3_lbl" value="Amazon S3&lt;br&gt;Invoice Storage" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#2d6219;" vertex="1" parent="1">
+      <mxGeometry x="1440" y="355" width="110" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- AWS: RDS (PostgreSQL) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="rds" value="&lt;b&gt;Amazon RDS&lt;/b&gt;&lt;br&gt;PostgreSQL&lt;br&gt;&lt;br&gt;Hotels · RoomTypes&lt;br&gt;Bookings · PaymentRecords&lt;br&gt;CompanyContacts" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;fillColor=#2E73B8;strokeColor=#1a4f82;fontColor=#ffffff;fontSize=11;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1460" y="430" width="70" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="rds_lbl" value="Amazon RDS&lt;br&gt;PostgreSQL" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#1a4f82;" vertex="1" parent="1">
+      <mxGeometry x="1445" y="505" width="100" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- AWS: SECRETS MANAGER -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="secrets" value="&lt;b&gt;Secrets Manager&lt;/b&gt;&lt;br&gt;DATABASE_URL&lt;br&gt;AZURE_OPENAI_KEY&lt;br&gt;LANGFUSE_SECRET_KEY" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;fillColor=#E7157B;strokeColor=#AB0073;fontColor=#ffffff;fontSize=10;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1460" y="580" width="70" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="secrets_lbl" value="Secrets Manager" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#AB0073;" vertex="1" parent="1">
+      <mxGeometry x="1445" y="655" width="110" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- AWS: CLOUDWATCH LOGS -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="cloudwatch" value="&lt;b&gt;CloudWatch Logs&lt;/b&gt;&lt;br&gt;/ecs/backend&lt;br&gt;/ecs/frontend&lt;br&gt;&lt;i&gt;app.log streamed&lt;/i&gt;" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch;fillColor=#E7157B;strokeColor=#AB0073;fontColor=#ffffff;fontSize=10;whiteSpace=wrap;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1460" y="690" width="70" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="cloudwatch_lbl" value="CloudWatch Logs" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#AB0073;" vertex="1" parent="1">
+      <mxGeometry x="1445" y="765" width="110" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- EXTERNAL: AZURE OPENAI -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="ext_ai" value="☁️  Azure OpenAI" style="swimlane;startSize=30;fillColor=#ffedd5;strokeColor=#f97316;fontStyle=1;fontSize=13;fontColor=#7c2d12;" vertex="1" parent="1">
+      <mxGeometry x="1600" y="210" width="540" height="280" as="geometry"/>
+    </mxCell>
+    <mxCell id="ai_gpt4o" value="&lt;b&gt;GPT-4o&lt;/b&gt;&lt;br&gt;AzureChatOpenAI&lt;br&gt;&lt;br&gt;• Orchestrator&lt;br&gt;  (structured output)&lt;br&gt;• Search &amp; Avail Agent&lt;br&gt;• Booking Agent (4 LLMs)&lt;br&gt;• Invoice Agent&lt;br&gt;• PDF text extraction" style="rounded=1;whiteSpace=wrap;fillColor=#fed7aa;strokeColor=#f97316;fontColor=#7c2d12;fontSize=11;" vertex="1" parent="ext_ai">
+      <mxGeometry x="30" y="50" width="210" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="ai_vision" value="&lt;b&gt;GPT-4o Vision&lt;/b&gt;&lt;br&gt;AzureOpenAI&lt;br&gt;&lt;br&gt;• Invoice image&lt;br&gt;  extraction&lt;br&gt;  PNG / JPG&lt;br&gt;  (base64 encoded)" style="rounded=1;whiteSpace=wrap;fillColor=#fed7aa;strokeColor=#f97316;fontColor=#7c2d12;fontSize=11;" vertex="1" parent="ext_ai">
+      <mxGeometry x="290" y="50" width="210" height="200" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- EXTERNAL: OBSERVABILITY -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="ext_obs" value="📊  Observability" style="swimlane;startSize=30;fillColor=#f1f5f9;strokeColor=#64748b;fontStyle=1;fontSize=13;fontColor=#1e293b;" vertex="1" parent="1">
+      <mxGeometry x="1600" y="510" width="540" height="250" as="geometry"/>
+    </mxCell>
+    <mxCell id="obs_langfuse" value="&lt;b&gt;Langfuse&lt;/b&gt;&lt;br&gt;@observe spans&lt;br&gt;&lt;br&gt;• hotel_chat (root)&lt;br&gt;• orchestrator_agent&lt;br&gt;• booking_agent&lt;br&gt;• search_availability_agent" style="rounded=1;whiteSpace=wrap;fillColor=#e2e8f0;strokeColor=#64748b;fontColor=#1e293b;fontSize=11;" vertex="1" parent="ext_obs">
+      <mxGeometry x="20" y="45" width="220" height="175" as="geometry"/>
+    </mxCell>
+    <mxCell id="obs_eval" value="&lt;b&gt;Evaluator&lt;/b&gt;&lt;br&gt;evaluator.py&lt;br&gt;&lt;br&gt;• relevance score&lt;br&gt;• helpfulness score&lt;br&gt;• accuracy score&lt;br&gt;&lt;br&gt;→ posted to Langfuse&lt;br&gt;  per trace" style="rounded=1;whiteSpace=wrap;fillColor=#e2e8f0;strokeColor=#64748b;fontColor=#1e293b;fontSize=11;" vertex="1" parent="ext_obs">
+      <mxGeometry x="290" y="45" width="220" height="175" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- SERVICES + DB (collapsed, below ECS) -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="lane_services2" value="🔧  Services — backend/services/" style="swimlane;startSize=28;fillColor=#ede9fe;strokeColor=#8b5cf6;fontStyle=1;fontSize=12;fontColor=#4c1d95;" vertex="1" parent="1">
+      <mxGeometry x="50" y="830" width="1390" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="s2_hotel" value="&lt;b&gt;hotel_service&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#ddd6fe;strokeColor=#8b5cf6;fontColor=#4c1d95;fontSize=11;" vertex="1" parent="lane_services2">
+      <mxGeometry x="20" y="28" width="160" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2_avail" value="&lt;b&gt;availability_service&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#ddd6fe;strokeColor=#8b5cf6;fontColor=#4c1d95;fontSize=11;" vertex="1" parent="lane_services2">
+      <mxGeometry x="195" y="28" width="185" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2_price" value="&lt;b&gt;price_service&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#ddd6fe;strokeColor=#8b5cf6;fontColor=#4c1d95;fontSize=11;" vertex="1" parent="lane_services2">
+      <mxGeometry x="395" y="28" width="160" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2_pay" value="&lt;b&gt;payment_service&lt;/b&gt; (simulated)" style="rounded=1;whiteSpace=wrap;fillColor=#ddd6fe;strokeColor=#8b5cf6;fontColor=#4c1d95;fontSize=11;" vertex="1" parent="lane_services2">
+      <mxGeometry x="570" y="28" width="210" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2_book" value="&lt;b&gt;booking_service&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#ddd6fe;strokeColor=#8b5cf6;fontColor=#4c1d95;fontSize=11;" vertex="1" parent="lane_services2">
+      <mxGeometry x="795" y="28" width="160" height="34" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- TESTS -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="lane_tests2" value="✅  pytest — tests/  (144 tests, 0 failures)" style="swimlane;startSize=28;fillColor=#f0fdf4;strokeColor=#4ade80;fontStyle=1;fontSize=12;fontColor=#14532d;dashed=1;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="50" y="930" width="1390" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_1" value="test_input_guardrail" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="10" y="26" width="150" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_2" value="test_output_guardrail" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="170" y="26" width="150" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_3" value="test_orchestrator_agent" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="330" y="26" width="165" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_4" value="test_booking_agent" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="505" y="26" width="150" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_5" value="test_invoice_agent" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="665" y="26" width="140" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_6" value="test_tools (8 tools)" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="815" y="26" width="140" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_7" value="test_api_main" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="965" y="26" width="130" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3_8" value="test_graph_routing" style="rounded=1;fillColor=#dcfce7;strokeColor=#4ade80;fontColor=#14532d;fontSize=10;" vertex="1" parent="lane_tests2">
+      <mxGeometry x="1105" y="26" width="140" height="26" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- LEGEND -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <mxCell id="legend" value="Legend" style="swimlane;startSize=25;fillColor=#ffffff;strokeColor=#94a3b8;fontStyle=1;fontSize=11;fontColor=#1e293b;" vertex="1" parent="1">
+      <mxGeometry x="1600" y="790" width="540" height="185" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg1" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#3b82f6;strokeWidth=2;fillColor=none;" edge="1" parent="legend">
+      <mxGeometry x="20" y="50" width="80" height="20" relative="0" as="geometry">
+        <mxPoint x="20" y="50" as="sourcePoint"/>
+        <mxPoint x="100" y="50" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="leg1lbl" value="User request flow" style="text;html=1;fontSize=10;" vertex="1" parent="legend">
+      <mxGeometry x="110" y="42" width="140" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg2" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#eab308;strokeWidth=2;fillColor=none;" edge="1" parent="legend">
+      <mxGeometry x="20" y="75" width="80" height="20" relative="0" as="geometry">
+        <mxPoint x="20" y="75" as="sourcePoint"/>
+        <mxPoint x="100" y="75" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="leg2lbl" value="Agent routing" style="text;html=1;fontSize=10;" vertex="1" parent="legend">
+      <mxGeometry x="110" y="67" width="140" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg3" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#f97316;strokeWidth=2;dashed=1;fillColor=none;" edge="1" parent="legend">
+      <mxGeometry x="20" y="100" width="80" height="20" relative="0" as="geometry">
+        <mxPoint x="20" y="100" as="sourcePoint"/>
+        <mxPoint x="100" y="100" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="leg3lbl" value="LLM API call" style="text;html=1;fontSize=10;" vertex="1" parent="legend">
+      <mxGeometry x="110" y="92" width="140" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg4" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#16a34a;strokeWidth=1.5;fillColor=none;" edge="1" parent="legend">
+      <mxGeometry x="20" y="125" width="80" height="20" relative="0" as="geometry">
+        <mxPoint x="20" y="125" as="sourcePoint"/>
+        <mxPoint x="100" y="125" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="leg4lbl" value="Database / S3 access" style="text;html=1;fontSize=10;" vertex="1" parent="legend">
+      <mxGeometry x="110" y="117" width="140" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg5" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#64748b;strokeWidth=1.5;dashed=1;fillColor=none;" edge="1" parent="legend">
+      <mxGeometry x="20" y="150" width="80" height="20" relative="0" as="geometry">
+        <mxPoint x="20" y="150" as="sourcePoint"/>
+        <mxPoint x="100" y="150" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="leg5lbl" value="Observability / tracing" style="text;html=1;fontSize=10;" vertex="1" parent="legend">
+      <mxGeometry x="110" y="142" width="140" height="20" as="geometry"/>
+    </mxCell>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- CONNECTIONS -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- CI/CD → ECR build flow -->
+    <mxCell id="ce1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#475569;strokeWidth=1.5;" edge="1" source="cicd_src" target="cicd_dockerfile_be" parent="lane_cicd">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#475569;strokeWidth=1.5;" edge="1" source="cicd_src" target="cicd_dockerfile_fe" parent="lane_cicd">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#475569;strokeWidth=1.5;" edge="1" source="cicd_dockerfile_be" target="cicd_build" parent="lane_cicd">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#475569;strokeWidth=1.5;" edge="1" source="cicd_dockerfile_fe" target="cicd_build" parent="lane_cicd">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#ED7100;strokeWidth=2;" edge="1" source="cicd_build" target="cicd_ecr" parent="lane_cicd">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ECR → ECS (pull images) -->
+    <mxCell id="ce6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#ED7100;strokeWidth=2;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="cicd_ecr" target="ecs_fe_svc" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce6lbl" value="ECS pulls image" style="edgeLabel;fontSize=9;fontColor=#ED7100;" vertex="1" connectable="0" parent="ce6">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#ED7100;strokeWidth=2;dashed=1;" edge="1" source="cicd_ecr" target="ecs_be_svc" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ALB → ECS services -->
+    <mxCell id="ca1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8C4FFF;strokeWidth=2;" edge="1" source="alb" target="ecs_fe_svc" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ca1lbl" value=":8501" style="edgeLabel;fontSize=9;fontColor=#8C4FFF;" vertex="1" connectable="0" parent="ca1">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+    <mxCell id="ca2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8C4FFF;strokeWidth=2;" edge="1" source="alb" target="ecs_be_svc" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ca2lbl" value=":8000" style="edgeLabel;fontSize=9;fontColor=#8C4FFF;" vertex="1" connectable="0" parent="ca2">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- Frontend → Backend (HTTP) -->
+    <mxCell id="cf1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#3b82f6;strokeWidth=2;" edge="1" source="fe_upload2" target="api_upload_ep2" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cf1lbl" value="POST /upload-invoice" style="edgeLabel;fontSize=9;fontColor=#3b82f6;" vertex="1" connectable="0" parent="cf1">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+    <mxCell id="cf2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#3b82f6;strokeWidth=2;" edge="1" source="fe_chat2" target="api_chat_ep2" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cf2lbl" value="POST /chat" style="edgeLabel;fontSize=9;fontColor=#3b82f6;" vertex="1" connectable="0" parent="cf2">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- Upload → S3 -->
+    <mxCell id="cs1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#3F8624;strokeWidth=2;" edge="1" source="api_upload_ep2" target="s3_bucket" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cs1lbl" value="PutObject" style="edgeLabel;fontSize=9;fontColor=#3F8624;" vertex="1" connectable="0" parent="cs1">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- Invoice tool → S3 (download for processing) -->
+    <mxCell id="cs2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#3F8624;strokeWidth=2;dashed=1;" edge="1" source="t2_inv" target="s3_bucket" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cs2lbl" value="GetObject" style="edgeLabel;fontSize=9;fontColor=#3F8624;" vertex="1" connectable="0" parent="cs2">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- Backend → RDS -->
+    <mxCell id="cr1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#2E73B8;strokeWidth=2;" edge="1" source="ecs_be_svc" target="rds" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cr1lbl" value="SQLAlchemy" style="edgeLabel;fontSize=9;fontColor=#2E73B8;" vertex="1" connectable="0" parent="cr1">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- Backend → Secrets -->
+    <mxCell id="csec1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#E7157B;strokeWidth=1.5;dashed=1;" edge="1" source="ecs_be_svc" target="secrets" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="csec1lbl" value="env inject" style="edgeLabel;fontSize=9;fontColor=#E7157B;" vertex="1" connectable="0" parent="csec1">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- ECS → CloudWatch Logs -->
+    <mxCell id="ccw1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#E7157B;strokeWidth=1.5;dashed=1;" edge="1" source="ecs_be_svc" target="cloudwatch" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ccw1lbl" value="awslogs driver" style="edgeLabel;fontSize=9;fontColor=#E7157B;" vertex="1" connectable="0" parent="ccw1">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- Agents → Azure OpenAI -->
+    <mxCell id="cai1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#f97316;strokeWidth=2;dashed=1;" edge="1" source="g_orch2" target="ai_gpt4o" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cai2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#f97316;strokeWidth=2;dashed=1;" edge="1" source="g_sa2" target="ai_gpt4o" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cai3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#f97316;strokeWidth=2;dashed=1;" edge="1" source="g_ba2" target="ai_gpt4o" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cai4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#f97316;strokeWidth=2;dashed=1;" edge="1" source="g_ia2" target="ai_gpt4o" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cai5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#f97316;strokeWidth=2;dashed=1;" edge="1" source="t2_inv" target="ai_vision" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- LangGraph → Services -->
+    <mxCell id="clg1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8b5cf6;strokeWidth=1.5;" edge="1" source="lg_border" target="lane_services2" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Services → RDS -->
+    <mxCell id="csr1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#2E73B8;strokeWidth=1.5;" edge="1" source="lane_services2" target="rds" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Observability -->
+    <mxCell id="cobs1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#64748b;strokeWidth=1.5;dashed=1;" edge="1" source="ecs_be_svc" target="obs_langfuse" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cobs1lbl" value="@observe traces" style="edgeLabel;fontSize=9;fontColor=#64748b;" vertex="1" connectable="0" parent="cobs1">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+    <mxCell id="cobs2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#64748b;strokeWidth=1.5;dashed=1;" edge="1" source="api_chat_ep2" target="obs_eval" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cobs2lbl" value="evaluate_response()" style="edgeLabel;fontSize=9;fontColor=#64748b;" vertex="1" connectable="0" parent="cobs2">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- API internal flow arrows -->
+    <mxCell id="cint1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#22c55e;strokeWidth=1.5;" edge="1" source="api_chat_ep2" target="api_guard2" parent="ecs_be_svc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cint2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#22c55e;strokeWidth=1.5;" edge="1" source="api_guard2" target="api_session2" parent="ecs_be_svc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cint3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#eab308;strokeWidth=2;" edge="1" source="api_session2" target="lg_border" parent="ecs_be_svc">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cint3lbl" value="state dict" style="edgeLabel;fontSize=9;fontColor=#713f12;" vertex="1" connectable="0" parent="cint3">
+      <mxGeometry relative="0.5" as="geometry"/>
+    </mxCell>
+
+    <!-- Orchestrator → agents inside LangGraph -->
+    <mxCell id="cla1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#eab308;strokeWidth=1.5;" edge="1" source="g_orch2" target="g_sa2" parent="lg_border">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cla2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#eab308;strokeWidth=1.5;" edge="1" source="g_orch2" target="g_ba2" parent="lg_border">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="cla3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#eab308;strokeWidth=1.5;" edge="1" source="g_orch2" target="g_ia2" parent="lg_border">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
