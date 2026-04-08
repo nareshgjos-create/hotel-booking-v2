@@ -44,22 +44,78 @@ jobs:
             --cov=backend \
             --cov-report=term-missing \
             --cov-report=html:coverage-report \
-            --cov-report=xml:coverage.xml
+            --cov-report=xml:coverage.xml \
+            --junitxml=test-results.xml
 
-      # ── 5. Upload HTML coverage report ───────────────────────────────────────
-      - name: Upload coverage HTML report
+      # ── 5. Write coverage summary to GitHub Actions UI ───────────────────────
+      - name: Publish coverage to job summary
+        if: always()
+        run: |
+          echo "## 🧪 Test & Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Test result counts from junit xml
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os
+
+          tree = ET.parse("test-results.xml")
+          root = tree.getroot()
+          suite = root if root.tag == "testsuite" else root.find("testsuite")
+
+          tests   = suite.get("tests", "?")
+          failed  = suite.get("failures", "0")
+          errors  = suite.get("errors", "0")
+          skipped = suite.get("skipped", "0")
+          passed  = str(int(tests) - int(failed) - int(errors) - int(skipped))
+          time    = suite.get("time", "?")
+
+          summary = os.environ["GITHUB_STEP_SUMMARY"]
+          with open(summary, "a") as f:
+              f.write(f"### Results\n")
+              f.write(f"| ✅ Passed | ❌ Failed | ⚠️ Errors | ⏭️ Skipped | ⏱️ Duration |\n")
+              f.write(f"|-----------|-----------|-----------|------------|-------------|\n")
+              f.write(f"| {passed}  | {failed}  | {errors}  | {skipped}  | {time}s     |\n\n")
+          EOF
+
+          # Coverage table
+          echo "### Coverage by module" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Module | Statements | Missed | Coverage |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-----------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, os
+
+          tree = ET.parse("coverage.xml")
+          root = tree.getroot()
+          summary = os.environ["GITHUB_STEP_SUMMARY"]
+
+          with open(summary, "a") as f:
+              for pkg in root.iter("package"):
+                  for cls in pkg.iter("class"):
+                      name     = cls.get("filename", "").replace("backend/", "")
+                      stmts    = cls.get("line-rate", "0")
+                      lines    = [l for l in cls.iter("line")]
+                      total    = len(lines)
+                      missed   = sum(1 for l in lines if l.get("hits") == "0")
+                      covered  = total - missed
+                      pct      = round((covered / total * 100) if total else 0)
+                      bar      = "🟢" if pct >= 80 else "🟡" if pct >= 60 else "🔴"
+                      f.write(f"| `{name}` | {total} | {missed} | {bar} {pct}% |\n")
+
+              # Total line
+              total_stmts = int(root.get("lines-valid", 0))
+              total_miss  = int(root.get("lines-valid", 0)) - int(root.get("lines-covered", 0))
+              total_pct   = round(float(root.get("line-rate", 0)) * 100)
+              bar         = "🟢" if total_pct >= 80 else "🟡" if total_pct >= 60 else "🔴"
+              f.write(f"| **TOTAL** | **{total_stmts}** | **{total_miss}** | **{bar} {total_pct}%** |\n")
+          EOF
+
+      # ── 6. Upload HTML report as artifact (for line-by-line detail) ──────────
+      - name: Upload HTML coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage-report/
-          retention-days: 30
-
-      # ── 6. Upload coverage XML (for external tools like Codecov) ─────────────
-      - name: Upload coverage XML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-xml
-          path: coverage.xml
           retention-days: 30
