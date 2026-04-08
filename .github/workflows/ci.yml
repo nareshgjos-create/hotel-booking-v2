@@ -2,9 +2,9 @@ name: CI — Run Tests
 
 on:
   push:
-    branches: ["**"]        # every branch push
+    branches: ["**"]
   pull_request:
-    branches: ["**"]        # every PR
+    branches: ["**"]
 
 jobs:
   test:
@@ -21,15 +21,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements-docker.txt
 
       # ── 3. Install dependencies ──────────────────────────────────────────────
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements-docker.txt
-          pip install pytest httpx pytest-cov
+          pip install pytest pytest-cov httpx
 
       # ── 4. Run tests with coverage ───────────────────────────────────────────
       - name: Run pytest with coverage
@@ -48,8 +46,8 @@ jobs:
             --cov-report=html:coverage-report \
             --cov-report=xml:coverage.xml
 
-      # ── 5. Upload HTML coverage report (always, so you can browse it) ────────
-      - name: Upload coverage report
+      # ── 5. Upload HTML coverage report ───────────────────────────────────────
+      - name: Upload coverage HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -57,9 +55,11 @@ jobs:
           path: coverage-report/
           retention-days: 30
 
-      # ── 6. Print coverage summary in the job log ─────────────────────────────
-      - name: Coverage summary
+      # ── 6. Upload coverage XML (for external tools like Codecov) ─────────────
+      - name: Upload coverage XML
         if: always()
-        run: |
-          pip install coverage
-          coverage report --format=markdown || true
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          retention-days: 30
