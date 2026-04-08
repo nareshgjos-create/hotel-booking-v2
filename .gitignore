@@ -32,6 +32,9 @@ coverage.xml
 logs/
 *.log
 
+# ── Claude Code settings ───────────────────────────────────────────────────────
+.claude/
+
 # ── Uploads (local invoice files) ─────────────────────────────────────────────
 /app/uploads/
 
