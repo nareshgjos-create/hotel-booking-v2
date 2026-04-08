@@ -62,7 +62,6 @@ except Exception as e:
 SESSION_STORE = {}
 
 UPLOAD_DIR = Path("/app/uploads")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ── Invoice upload endpoint ────────────────────────────────────────────────────
@@ -87,6 +86,7 @@ async def upload_invoice(file: UploadFile = File(...)):
             return {"error": f"Upload failed: {e}"}
     else:
         # ── Development: store locally ────────────────────────────────────────
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         dest = UPLOAD_DIR / f"{file_id}{suffix}"
         dest.write_bytes(file_bytes)
         logger.info(f"📄 Invoice uploaded locally: {dest}")
