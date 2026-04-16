@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "eu-west-2"
-    ECR_REPO: "666127452756.dkr.ecr.eu-west-2.amazonaws.com/hotel_booking"
+    ECR_REPO: "hotel_booking"
     ECS_CLUSTER: "hotel-booking"
     BACKEND_SERVICE: "hotel-booking-backend"
     FRONTEND_SERVICE: "hotel-booking-frontend"
