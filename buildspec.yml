@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "eu-west-2"
+    ECR_REGISTRY: "666127452756.dkr.ecr.eu-west-2.amazonaws.com"
     ECR_REPO: "hotel_booking"
     ECS_CLUSTER: "hotel-booking"
     BACKEND_SERVICE: "hotel-booking-backend"
@@ -12,21 +13,21 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
   build:
     commands:
       - echo Building backend image...
-      - docker build -f Dockerfile.backend -t $ECR_REPO:backend-latest .
+      - docker build -f Dockerfile.backend -t $ECR_REGISTRY/$ECR_REPO:backend-latest .
       - echo Building frontend image...
-      - docker build -f Dockerfile.frontend -t $ECR_REPO:frontend-latest .
+      - docker build -f Dockerfile.frontend -t $ECR_REGISTRY/$ECR_REPO:frontend-latest .
 
   post_build:
     commands:
       - echo Pushing backend image...
-      - docker push $ECR_REPO:backend-latest
+      - docker push $ECR_REGISTRY/$ECR_REPO:backend-latest
       - echo Pushing frontend image...
-      - docker push $ECR_REPO:frontend-latest
+      - docker push $ECR_REGISTRY/$ECR_REPO:frontend-latest
       - echo Deploying to ECS...
       - aws ecs update-service --cluster $ECS_CLUSTER --service $BACKEND_SERVICE --force-new-deployment --region $AWS_REGION
       - aws ecs update-service --cluster $ECS_CLUSTER --service $FRONTEND_SERVICE --force-new-deployment --region $AWS_REGION
