@@ -2,38 +2,32 @@ version: 0.2
 
 env:
   variables:
-    AWS_REGION: eu-west-2
-    ECR_REPO: sammlflow
-    AWS_ACCOUNT_ID: 666127452756
-    IMAGE_TAG: latest
+    AWS_REGION: "eu-west-2"
+    ECR_REPO: "666127452756.dkr.ecr.eu-west-2.amazonaws.com/hotel_booking"
+    ECS_CLUSTER: "hotel-booking"
+    BACKEND_SERVICE: "hotel-booking-backend"
+    FRONTEND_SERVICE: "hotel-booking-frontend"
 
 phases:
   pre_build:
     commands:
-      - echo "Checking AWS identity..."
-      - aws sts get-caller-identity
-      - echo "Listing ECR repos..."
-      - aws ecr describe-repositories --region $AWS_REGION || echo "No repos or no access"
-
-      - echo "Logging into ECR..."
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
 
   build:
     commands:
-      - echo "Building Docker image..."
-      - docker build -t $ECR_REPO -f Dockerfile.inference .
-
-      - echo "Tagging image..."
-      - docker tag $ECR_REPO:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+      - echo Building backend image...
+      - docker build -f Dockerfile.backend -t $ECR_REPO:backend-latest .
+      - echo Building frontend image...
+      - docker build -f Dockerfile.frontend -t $ECR_REPO:frontend-latest .
 
   post_build:
     commands:
-      - echo "Pushing image..."
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
-
-      - echo "Writing imagedefinitions.json..."
-      - printf '[{"name":"inference","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG > imagedefinitions.json
-
-artifacts:
-  files:
-    - imagedefinitions.json
+      - echo Pushing backend image...
+      - docker push $ECR_REPO:backend-latest
+      - echo Pushing frontend image...
+      - docker push $ECR_REPO:frontend-latest
+      - echo Deploying to ECS...
+      - aws ecs update-service --cluster $ECS_CLUSTER --service $BACKEND_SERVICE --force-new-deployment --region $AWS_REGION
+      - aws ecs update-service --cluster $ECS_CLUSTER --service $FRONTEND_SERVICE --force-new-deployment --region $AWS_REGION
+      - echo Deployment triggered successfully!
