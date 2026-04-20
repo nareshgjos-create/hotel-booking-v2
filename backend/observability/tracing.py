@@ -16,6 +16,23 @@ def get_langfuse_client():
         return None
 
 
+def _get_opik_client():
+    """Return an Opik client or None if not configured."""
+    try:
+        if not settings.OPIK_API_KEY:
+            return None
+        import opik
+        opik.configure(
+            api_key=settings.OPIK_API_KEY,
+            workspace=settings.OPIK_WORKSPACE or None,
+            use_local=False,
+        )
+        return opik.Opik(project_name=settings.OPIK_PROJECT)
+    except Exception as e:
+        logger.warning(f"Opik not available: {e}")
+        return None
+
+
 def trace_langfuse(user_message: str, agent_response: str,
                    user_name: str = "", duration: float = 0.0):
     try:
@@ -38,8 +55,29 @@ def trace_langfuse(user_message: str, agent_response: str,
         logger.warning(f"Langfuse logging failed: {e}")
 
 
+def trace_opik(user_message: str, agent_response: str,
+               user_name: str = "", duration: float = 0.0):
+    try:
+        client = _get_opik_client()
+        if not client:
+            return
+
+        trace = client.trace(
+            name="hotel-agent-summary",
+            input={"message": user_message},
+            output={"response": agent_response},
+            metadata={"user_name": user_name, "duration_seconds": round(duration, 3)},
+        )
+        client.flush()
+        logger.info(f"✅ Opik: trace logged! trace_id={trace.id}")
+
+    except Exception as e:
+        logger.warning(f"Opik logging failed: {e}")
+
+
 def trace_all(user_message: str, agent_response: str,
               user_name: str = "", duration: float = 0.0):
     logger.info("📊 Starting observability tracing...")
     trace_langfuse(user_message, agent_response, user_name, duration)
+    trace_opik(user_message, agent_response, user_name, duration)
     logger.info("📊 Tracing complete!")

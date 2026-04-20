@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     JWT_ALGORITHM      : str = "HS256"
     JWT_EXPIRE_MINUTES : int = 1440  # 24 hours
 
+    # ── Opik Observability ────────────────
+    OPIK_API_KEY    : str = ""
+    OPIK_WORKSPACE  : str = ""
+    OPIK_PROJECT    : str = "hotel-booking-v2"
+
     # ── AWS S3 (invoice storage) ──────────
     # Leave S3_BUCKET empty to use local /app/uploads/ (development mode)
     AWS_REGION   : str = "eu-west-2"

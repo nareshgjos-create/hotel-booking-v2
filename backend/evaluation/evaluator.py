@@ -6,8 +6,7 @@ Automatically evaluates every agent response on three dimensions:
   - helpfulness : Is the response helpful and actionable?
   - accuracy    : Does the response appear accurate (no hallucinations)?
 
-Scores (0.0 – 1.0) are posted directly to Langfuse via trace_id so they
-appear on the trace in the Langfuse dashboard.
+Scores (0.0 – 1.0) are posted to both Langfuse and Opik.
 """
 import json
 
@@ -19,7 +18,7 @@ from backend.config import settings
 from backend.utils.logger import logger
 
 
-# ── Judge LLM (same deployment, temperature=0 for consistency) ────────────────
+# ── Judge LLM ─────────────────────────────────────────────────────────────────
 _judge_llm = AzureChatOpenAI(
     azure_deployment=settings.AZURE_OPENAI_DEPLOYMENT,
     azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
@@ -60,6 +59,23 @@ def _get_langfuse() -> Langfuse | None:
         return None
 
 
+# ── Opik client ────────────────────────────────────────────────────────────────
+def _get_opik():
+    try:
+        if not settings.OPIK_API_KEY:
+            return None
+        import opik
+        opik.configure(
+            api_key=settings.OPIK_API_KEY,
+            workspace=settings.OPIK_WORKSPACE or None,
+            use_local=False,
+        )
+        return opik.Opik(project_name=settings.OPIK_PROJECT)
+    except Exception as e:
+        logger.warning(f"Opik not available: {e}")
+        return None
+
+
 # ── Public API ─────────────────────────────────────────────────────────────────
 def evaluate_response(
     user_message: str,
@@ -68,10 +84,7 @@ def evaluate_response(
 ) -> dict:
     """
     LLM-as-Judge evaluation.
-
-    1. Asks the judge LLM to score relevance / helpfulness / accuracy.
-    2. Posts all three scores to the Langfuse trace identified by trace_id.
-
+    Posts scores to Langfuse (via trace_id) and Opik.
     Returns the raw scores dict (or {} on failure).
     """
     try:
@@ -82,7 +95,6 @@ def evaluate_response(
         result = _judge_llm.invoke([HumanMessage(content=prompt)])
         raw = result.content.strip()
 
-        # Strip markdown code fence if the LLM wraps the JSON
         if raw.startswith("```"):
             raw = raw.split("```")[1].lstrip("json").strip()
 
@@ -108,7 +120,34 @@ def evaluate_response(
                             comment=comment,
                         )
                 langfuse.flush()
-                logger.info(f"✅ Langfuse: evaluation scores posted to trace {trace_id}")
+                logger.info(f"✅ Langfuse: scores posted to trace {trace_id}")
+
+        # ── Post scores to Opik ────────────────────────────────────────────
+        opik_client = _get_opik()
+        if opik_client:
+            try:
+                trace = opik_client.trace(
+                    name="llm-judge-evaluation",
+                    input={"user_message": user_message},
+                    output={"agent_response": agent_response},
+                    metadata={
+                        "relevance":   scores.get("relevance"),
+                        "helpfulness": scores.get("helpfulness"),
+                        "accuracy":    scores.get("accuracy"),
+                        "comment":     scores.get("comment", ""),
+                    },
+                )
+                for metric in _SCORE_NAMES:
+                    if metric in scores:
+                        opik_client.create_score(
+                            trace_id=trace.id,
+                            name=metric,
+                            value=float(scores[metric]),
+                        )
+                opik_client.flush()
+                logger.info(f"✅ Opik: evaluation scores posted to trace {trace.id}")
+            except Exception as e:
+                logger.warning(f"Opik evaluation posting failed: {e}")
 
         return scores
 
